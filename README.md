@@ -85,6 +85,78 @@ Catatan:
 - Pastikan file daftar.txt dapat diakses dari text editor
 
 PENJELASAN:
+- Langkah awal lakukan deklarasi awal untuk Pipe
+```
+pid_t child1;
+pid_t child2;
+pid_t child3;
+int ini_pipe1[2], ini_pipe2[2];
+pipe(ini_pipe1);
+pipe(ini_pipe2);
+```
+- Jalankan fork() untuk proses pertama yaitu mengekstrak zip.
+```
+child1 = fork();
+if (child1 < 0){
+	exit(EXIT_FAILURE);
+}
+if (child1 == 0) {
+	char *zip[] = {"unzip", "/home/haikal/Modul2/campur2.zip", NULL};
+	execvp(zip[0], zip);
+}
+```
+- Jalankan fork() untuk proses kedua yaitu mengambil nama dari folder hasil unzip setelah proses pertama selesai. 
+```
+	else {
+		while(wait(NULL) > 0); //tunggu Process1 selesai
+		// Process2
+		child2 = fork();
+		if (child2 < 0){
+			exit(EXIT_FAILURE);
+		} 
+		if(child2 == 0){
+			dup2(ini_pipe1[1], STDOUT_FILENO); 
+			close(ini_pipe1[1]);
+			close(ini_pipe1[0]);
+			char *ls[] = {"ls", "/home/haikal/Modul2/campur2", NULL};
+			execvp(ls[0], ls);
+		}	
+```
+- Hubungkan STDOUT dari proses ini kepada pipe bagian write. Lalu dilakukan penutupan pada semua jalur Pipe.
+- Lakukan fork() untuk proses ketiga yaitu mengambil nama dari folder hasil unzip. Namun diperlukan menunggu proses pertama selesai terlebuh dahulu sehingga di gunakan while(wait(NULL) > 0);
+```
+		else{
+			while(wait(NULL) > 0); //tunggu Process2 selesai
+			// Process3
+			child3 = fork();
+			if(child3 < 0){
+				exit(EXIT_FAILURE);
+			}
+			if(child3 == 0){
+				dup2(ini_pipe1[0], STDIN_FILENO);
+				dup2(ini_pipe2[1], STDOUT_FILENO); 
+				close(ini_pipe1[0]);
+				close(ini_pipe1[1]);
+				close(ini_pipe2[0]); 
+				close(ini_pipe2[1]);
+				char *grep[] = {"grep", ".txt$", NULL};
+				execvp(grep[0], grep);
+			}
+```
+- Hubungkan STDIN ke pipe1 bagian read dan hubungkan STDOUT dari proses ini kepada pipe2 bagian write 
+- Lalu dilakukan penutupan pada semua jalur dari pipe dan tampilkan hasilnya pada file "daftar.txt" dari hasil unzip yang bertipe ".txt"
+```
+			else{
+				char outp[99999];
+				close(ini_pipe1[0]);
+				close(ini_pipe1[1]);
+				close(ini_pipe2[1]);
+				read(ini_pipe2[0], outp, sizeof(outp));
+				FILE *ini_file = fopen("/home/haikal/Modul2/daftar.txt", "w");
+				fputs(outp, ini_file);
+				fclose(ini_file);
+			}
+```
 
 ##  No. 4
 4.  Dalam direktori /home/[user]/Documents/makanan terdapat file makan_enak.txt yang berisikan daftar makanan terkenal di Surabaya. Elen sedang melakukan diet dan seringkali tergiur untuk membaca isi makan_enak.txt karena ngidam makanan enak. Sebagai teman yang baik, Anda membantu Elen dengan membuat program C yang berjalan setiap 5 detik untuk memeriksa apakah file makan_enak.txt pernah dibuka setidaknya 30 detik yang lalu (rentang 0 - 30 detik).
