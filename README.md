@@ -142,3 +142,61 @@ Buatlah program c untuk menghentikan program di atas.
 NB: Dilarang menggunakan crontab dan tidak memakai argumen ketika menjalankan program.
 
 PENJELASAN:
+
+-   Pertama, kita mengcopy waktu dengan format dd:mm:yyyy-HH:MM ke dalam variable char my_time menggunakan 
+
+```
+strftime(my_time, sizeof(my_time), "%d:%m:%Y-%H:%M", tmp);
+```
+-   Selanjutnya, my_time akan dicopy kedalam variable untuk nama folder, disini kami menggunakan namaFolder yang berisi direktori dari folder tersebut. Jika sudah, maka folder tersebut akan dibuat dengan mkdir seperti berikut dengan tambahan syarat i sebagai counter menit % 30 = 0 yang artinya setiap 30 menit akan dibuat folder baru.
+
+```
+if(i%30 == 0)
+	{
+		strcpy(namaFolder,my_time);
+		strcpy(path,"/home/haikal/Modul2/log/");
+		strcat(path,namaFolder);
+		strcat(path, "/");
+		mkdir(path, 0777);
+	}
+```
+
+-   Untuk membuat nama file digunakan logno sebagai indeks dari log dan menyimpan format nama pada string namaFile sebagai berikut
+
+```
+int logno = i+1;
+char newLog[100];
+sprintf(newLog, "log%d", logno);
+strcat(newLog,".log");
+strcpy(namaFile, path);
+strcat(namaFile, newLog);
+```
+
+-   Terakhir, untuk mengcopy seluruh isi dari syslog ke file tersebut digunakan FILE dan fopen pada syslog dan log baru tesebut dengan ketentuan syslog yang di read dan log baru yang di write. Untuk mengcopy seluruh isi tersebut digunakan fgetc dan fputc. kemudian fclose semua file tersebut. kode seperti berikut
+
+```
+FILE *slog, *nlog;
+int c;
+slog=fopen("/var/log/syslog", "r");
+nlog=fopen(namaFile, "w");
+while(1){
+	    c=fgetc(slog);
+            if(feof(slog)){
+                break;
+            }
+            fputc(c, nlog);
+}
+fclose(slog);
+fclose(nlog);
+```
+
+-   Seluruh program tersebut dimasukkan kedalam daemon dengan sleep(60) (60 detik) dan mengincrement nilai i sebagai minute counter.
+
+-   untuk menghentikan program tersebut digunakan pkill -9, berhubung proses tersebut bernama soal5a, maka dapat digunakan program seperti berikut
+
+```
+int main(){
+	char *argv[] = {"pkill", "-9", "soal5a", NULL};
+	execv("/usr/bin/pkill", argv);
+}
+```
