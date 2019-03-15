@@ -58,60 +58,15 @@ Catatan:
 dilarang menggunakan crontab
 Contoh nama file : makan_sehat1.txt, makan_sehat2.txt, dst
 
-``
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <unistd.h>
-#include <syslog.h>
-#include <string.h>
 
-#include <time.h>
-//template from modul 2 daemon
-int main() {
-  pid_t pid, sid;
-
-  pid = fork();
-
-  if (pid < 0) {
-    exit(EXIT_FAILURE);
-  }
-
-  if (pid > 0) {
-    exit(EXIT_SUCCESS);
-  }
-
-  umask(0);
-
-  sid = setsid();
-
-  if (sid < 0) {
-    exit(EXIT_FAILURE);
-  }
-
-  if ((chdir("/")) < 0) {
-    exit(EXIT_FAILURE);
-  }
-
-  close(STDIN_FILENO);
-  close(STDOUT_FILENO);
-  close(STDERR_FILENO);
-
-  int i=1;
-  while(1) 
-  {
-    
+``` 
     char direktori[]="/home/andhika/Documents/makanan/makan_enak.txt";
     struct stat nama;
     stat(direktori, &nama);
     time_t x = nama.st_atime; //waktu akses
     time_t y = time(NULL); //waktu program berjalan
     
-    if(difftime(y, x)<=30) // kiri-kanan
-    {
+    if(difftime(y, x)<=30) // kiri-kanan{
       char x[100];
       sprintf(x, "%d", i);
 
@@ -125,13 +80,16 @@ int main() {
     }
     //waktu program
     sleep(5);
-  }
-  
-  exit(EXIT_SUCCESS);
-}
-``
+```
 
 PENJELASAN:
+-   langkah pertama masukan direktori yang dituju yaitu "/home/andhika/Documents/makanan/makan_enak.txt" pada variabel bernama direktori
+-   struct stat digunakan untuk mendapatkan informasi mengenai atribut dari sebuah file
+-   masuk ke kondisi percabangan, apabila hasil selisih diatara kedua bilangan tersebut kurang dari 30 maka:
+-   buat variabel bertipe karakter dengan nama x tujuannya untuk menyalin nilai bertipe integer dari variabel i ke dalam bentuk karakter
+-   setelah itu buat variabel bertipe char dengan nama direktori2 untuk memasukkan direktori nama file yang akan dibuat yaitu "/home/andhika/Documents/makanan/makan_sehat"; gabungkan variabel x tadi ke bagian belakang variabel direktori2 kemudian simpan di variabel direktori2 lalu gabungkan text ".txt" dengan direktori2. 
+-   Kemudian buat file dengan letak direktori sesuai dengan variabe direktori2
+-   program tersebut selalu berjalan setiap 5 detik
 
 
 ##  No. 5
